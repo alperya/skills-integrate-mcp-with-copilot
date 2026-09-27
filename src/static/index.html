@@ -8,8 +8,30 @@
   </head>
   <body>
     <header>
+      <div class="teacher-controls">
+        <button type="button" id="login-toggle">Teacher login</button>
+        <button type="button" id="logout-button" hidden>Log out</button>
+      </div>
       <h1>Mergington High School</h1>
       <h2>Extracurricular Activities</h2>
+      <dialog id="teacher-login-dialog">
+        <form id="login-form">
+          <h3>Teacher login</h3>
+          <div class="form-group">
+            <label for="teacher-username">Username:</label>
+            <input id="teacher-username" name="username" autocomplete="username" required />
+          </div>
+          <div class="form-group">
+            <label for="teacher-password">Password:</label>
+            <input id="teacher-password" name="password" type="password" autocomplete="current-password" required />
+          </div>
+          <p id="login-message" class="hidden" role="alert"></p>
+          <div class="dialog-actions">
+            <button type="button" id="cancel-login">Cancel</button>
+            <button type="submit">Log in</button>
+          </div>
+        </form>
+      </dialog>
     </header>
 
     <main>
@@ -21,7 +43,7 @@
         </div>
       </section>
 
-      <section id="signup-container">
+      <section id="signup-container" hidden>
         <h3>Sign Up for an Activity</h3>
         <form id="signup-form">
           <div class="form-group">
