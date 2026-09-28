@@ -2,7 +2,60 @@ document.addEventListener("DOMContentLoaded", () => {
   const activitiesList = document.getElementById("activities-list");
   const activitySelect = document.getElementById("activity");
   const signupForm = document.getElementById("signup-form");
+  const signupContainer = document.getElementById("signup-container");
   const messageDiv = document.getElementById("message");
+  const loginToggle = document.getElementById("login-toggle");
+  const logoutButton = document.getElementById("logout-button");
+  const loginDialog = document.getElementById("teacher-login-dialog");
+  const loginForm = document.getElementById("login-form");
+  const loginMessage = document.getElementById("login-message");
+  let teacherAuthorization = "";
+
+  loginToggle.addEventListener("click", () => loginDialog.showModal());
+  document.getElementById("cancel-login").addEventListener("click", () => {
+    loginDialog.close();
+    loginMessage.classList.add("hidden");
+  });
+
+  loginForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const username = document.getElementById("teacher-username").value;
+    const password = document.getElementById("teacher-password").value;
+
+    try {
+      const authorization = `Basic ${btoa(`${username}:${password}`)}`;
+      const response = await fetch("/auth/teacher", {
+        headers: { Authorization: authorization },
+      });
+
+      if (!response.ok) {
+        loginMessage.textContent = "Invalid teacher username or password.";
+        loginMessage.className = "error";
+        return;
+      }
+
+      teacherAuthorization = authorization;
+      loginDialog.close();
+      loginForm.reset();
+      loginToggle.hidden = true;
+      logoutButton.hidden = false;
+      signupContainer.hidden = false;
+      loginMessage.classList.add("hidden");
+      await fetchActivities();
+    } catch (error) {
+      loginMessage.textContent = "Unable to sign in. Please try again.";
+      loginMessage.className = "error";
+      console.error("Error signing in:", error);
+    }
+  });
+
+  logoutButton.addEventListener("click", () => {
+    teacherAuthorization = "";
+    loginToggle.hidden = false;
+    logoutButton.hidden = true;
+    signupContainer.hidden = true;
+    fetchActivities();
+  });
 
   // Function to fetch activities from API
   async function fetchActivities() {
@@ -12,6 +65,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // Clear loading message
       activitiesList.innerHTML = "";
+      while (activitySelect.options.length > 1) {
+        activitySelect.remove(1);
+      }
 
       // Populate activities list
       Object.entries(activities).forEach(([name, details]) => {
@@ -30,7 +86,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 ${details.participants
                   .map(
                     (email) =>
-                      `<li><span class="participant-email">${email}</span><button class="delete-btn" data-activity="${name}" data-email="${email}">❌</button></li>`
+                      `<li><span class="participant-email">${email}</span>${
+                        teacherAuthorization
+                          ? `<button class="delete-btn" data-activity="${name}" data-email="${email}" aria-label="Unregister ${email}">Remove</button>`
+                          : ""
+                      }</li>`
                   )
                   .join("")}
               </ul>
@@ -80,6 +140,7 @@ document.addEventListener("DOMContentLoaded", () => {
         )}/unregister?email=${encodeURIComponent(email)}`,
         {
           method: "DELETE",
+          headers: { Authorization: teacherAuthorization },
         }
       );
 
@@ -124,6 +185,7 @@ document.addEventListener("DOMContentLoaded", () => {
         )}/signup?email=${encodeURIComponent(email)}`,
         {
           method: "POST",
+          headers: { Authorization: teacherAuthorization },
         }
       );
 
